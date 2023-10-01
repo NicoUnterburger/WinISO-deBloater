@@ -47,7 +47,7 @@ If(!(test-path -PathType container $isoOutput)) {
 cd $isoOutput
 
 # Extract ISO-File
-$isoPath = Read-Host -Prompt "Bitte geben Sie den Pfad zur Windows ISO-Datei an!"
+$isoPath = Read-Host -Prompt "Please enter path for Windows ISO file!"
 Start-SevenZip  x $isoPath
 If(Test-Path -PathType Leaf -Path $isoOutput\sources\install.wim) {
     Copy-Item $isoOutput\sources\install.wim $workingDir
@@ -60,9 +60,9 @@ If(Test-Path -PathType Leaf -Path $isoOutput\sources\install.esd) {
 }
 
 # Remove unused Windows Versions (like Home, Enterprise or N-Versions)
-Write-Host "Starte deBloat Windows ISO:" $iso
-Write-Host "1. ungenutze Winows Editionen entfernen"
-Write-Host "Vorher:"
+Write-Host "Start deBloat Windows ISO:" $iso
+Write-Host "1. remove unused Windows Versions like Home, Enterprise or N-Versions"
+Write-Host "before:"
 
 Get-WindowsImage -ImagePath $iso | ft ImageIndex, ImageName
 $value = Get-WindowsImage -ImagePath $iso | sort ImageIndex | select -Last 1
@@ -72,7 +72,7 @@ for ($i=$maxindex; $i -gt 0; $i--) {
     if (($image.ImageName -ne "Windows 10 Pro") -AND ($image.ImageName -ne "Windows 11 Pro")) {Remove-WindowsImage -ImagePath $iso -Index $i -CheckIntegrity}
 }
 
-Write-Host "Nachher:"
+Write-Host "after:"
 Get-WindowsImage -ImagePath $iso | ft ImageIndex, ImageName
 
 If($iso -Like "*.esd") {
@@ -86,9 +86,9 @@ md WindowsImage
 Write-Host "Mount ISO"
 Mount-WindowsImage -ImagePath $iso -Index 1 -Path .\WindowsImage
 
-Write-Host "2. Bloatware Apps entfernen:"
+Write-Host "2. remove bloatware AppX-Packages:"
 foreach ($app in $apps) {
-    Write-Host "Try to Remove following AppX-Package: " $app
+    Write-Host "Try to Remove AppX-Package: " $app
     $selected = Get-AppxProvisionedPackage -Path .\WindowsImage | Where -filterScript {$_.DisplayName -like $app}
     Remove-AppxProvisionedPackage -Path .\WindowsImage -PackageName $selected.PackageName
 }
@@ -105,6 +105,7 @@ Remove-Item $isoOutput\sources\install.esd
 Copy-Item $workingDir\install.esd $isoOutput\sources\
 
 Write-Host ""
-Write-Host "NEUE install.esd wurde generiert und ausgetauscht."
+Write-Host "New 'install.esd'-File was generated successfull and also replaced in workingfolder."
 Write-Host "Bitte den Ordner " $isoOutput "als .iso-Datei konvertieren (z.B. Tool Folder2ISO)"
+Write-Host "Next, create an ISO File from working Folder (" + $isoOutput + " with Tool below, or use install.esd for PXE-Server"
 Write-Host "https://www.heise.de/download/product/folder2iso-55117"
